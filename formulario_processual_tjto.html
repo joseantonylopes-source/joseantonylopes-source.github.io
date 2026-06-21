@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrada Processual Estruturada — Gabinete Dra. Odete / TJTO</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f1f0ec;
+    --border: #d6d4cc;
+    --border-strong: #b0ada4;
+    --text: #1a1917;
+    --text-sec: #5c5a55;
+    --text-hint: #8f8d88;
+    --accent: #2c5f8a;
+    --accent-light: #e6eff7;
+    --accent-text: #1a3f5c;
+    --success: #1a6b3a;
+    --success-bg: #e6f4ec;
+    --warning: #7a4f00;
+    --warning-bg: #fff8e6;
+    --danger: #8b1c1c;
+    --danger-bg: #fdecea;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  header {
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent-text);
+    margin-bottom: 3px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--text-sec);
+  }
+
+  .section {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-sec);
+    margin-bottom: 4px;
+  }
+
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="date"],
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 8px 11px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(44,95,138,0.1);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.55;
+  }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c5a55' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 90px 1fr 140px; gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+  @media (max-width: 600px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  .info-box {
+    background: var(--accent-light);
+    border: 0.5px solid #b3cfe5;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--accent-text);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .warning-box {
+    background: var(--warning-bg);
+    border: 0.5px solid #e6c56a;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--warning);
+    margin-top: 10px;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .warning-box.visible { display: block; }
+
+  .tempestividade-resultado {
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 10px;
+    display: none;
+    line-height: 1.5;
+  }
+
+  .tempestividade-resultado.tempestivo {
+    background: var(--success-bg);
+    border: 0.5px solid #7dc49a;
+    color: var(--success);
+    display: block;
+  }
+
+  .tempestividade-resultado.intempestivo {
+    background: var(--danger-bg);
+    border: 0.5px solid #e5a0a0;
+    color: var(--danger);
+    display: block;
+  }
+
+  .tempestividade-resultado.incompleto {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    color: var(--text-sec);
+    display: block;
+    font-weight: 400;
+  }
+
+  .eventos-lista { margin-top: 0.75rem; }
+
+  .evento-item {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .evento-badge {
+    background: var(--accent-light);
+    color: var(--accent-text);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .evento-info { flex: 1; min-width: 0; }
+
+  .evento-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .evento-meta {
+    font-size: 12px;
+    color: var(--text-sec);
+    margin-top: 1px;
+  }
+
+  .evento-teaser {
+    font-size: 12px;
+    color: var(--text-hint);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .evento-obs-badge {
+    font-size: 11px;
+    color: var(--warning);
+    margin-top: 3px;
+  }
+
+  .btn-del {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-hint);
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: color 0.15s;
+  }
+
+  .btn-del:hover { color: var(--danger); }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .btn:hover { background: var(--surface2); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .btn-primary:hover { background: var(--accent-text); border-color: var(--accent-text); }
+
+  .btn-download {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+  }
+
+  .btn-download:hover { background: #124f2b; border-color: #124f2b; }
+
+  .btn-danger {
+    background: var(--surface);
+    color: var(--danger);
+    border-color: #d4a0a0;
+  }
+
+  .btn-danger:hover { background: var(--danger-bg); }
+
+  .output-preview {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .empty-hint {
+    color: #6b6b6b;
+    font-style: italic;
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--success);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  hr.divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .required-mark { color: var(--danger); margin-left: 2px; }
+
+  .helper-text {
+    font-size: 11.5px;
+    color: var(--text-hint);
+    margin-top: 4px;
+  }
+
+  .dias-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <h1>Formulário de Entrada Processual Estruturada</h1>
+    <p>Gabinete da Dra. Odete Batista Dias Almeida &mdash; TJTO</p>
+  </header>
+
+  <!-- IDENTIFICAÇÃO -->
+  <div class="section">
+    <p class="section-title">Identificação do processo</p>
+    <div class="grid-2">
+      <div class="field">
+        <label>Número do processo <span class="required-mark">*</span></label>
+        <input type="text" id="num-processo" placeholder="0000000-00.0000.8.27.0000" oninput="atualizarOutput()">
+      </div>
+      <div class="field">
+        <label>Comarca / Vara de origem</label>
+        <input type="text" id="vara" placeholder="Ex.: 2ª Vara Cível de Araguaína" oninput="atualizarOutput()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Tipo de recurso / processo</label>
+      <select id="tipo-recurso" onchange="atualizarLabelsPartes(); atualizarOutput()">
+        <option value="apelacao">Apelação Cível</option>
+        <option value="agravo-instrumento">Agravo de Instrumento</option>
+        <option value="agravo-interno">Agravo Interno</option>
+        <option value="embargos-declaracao">Embargos de Declaração</option>
+        <option value="mandado-seguranca">Mandado de Segurança</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label id="label-parte1">Parte apelante</label>
+        <input type="text" id="apelante" placeholder="Nome completo" oninput="atualizarOutput()">
+      </div>
+      <div class="field">
+        <label id="label-parte2">Parte apelada</label>
+        <input type="text" id="apelada" placeholder="Nome completo" oninput="atualizarOutput()">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Gratuidade de justiça</label>
+        <select id="gratuidade" onchange="atualizarOutput()">
+          <option value="">— selecione —</option>
+          <option>Deferida</option>
+          <option>Indeferida</option>
+          <option>Não requerida</option>
+          <option>Não informada nos autos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Categoria (matriz decisória)</label>
+        <select id="categoria" onchange="atualizarOutput()">
+          <option value="">— selecione se já souber —</option>
+          <option value="Categoria A – Litigância predatória / fracionamento artificial de pretensões">Categoria A – Litigância predatória</option>
+          <option value="Categoria B – Extinção por descumprimento de emenda da inicial">Categoria B – Extinção / emenda da inicial</option>
+          <option value="Categoria C – Não enquadrado na matriz decisória">Categoria C – Não enquadrado</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Observações gerais sobre o processo</label>
+      <textarea id="obs-gerais" placeholder="Registre informações que não se encaixam em nenhum evento específico — ex.: sentença não fixou honorários; há múltiplas ações identificadas pelo juízo; pedido de dilação de prazo foi genérico; contrarrazões não localizadas no e-Proc etc." oninput="atualizarOutput()"></textarea>
+    </div>
+  </div>
+
+  <!-- TEMPESTIVIDADE -->
+  <div class="section">
+    <p class="section-title">Tempestividade do recurso</p>
+
+    <div class="info-box">
+      Preencha as datas abaixo para verificação automática da tempestividade. O prazo para apelação é de 15 dias úteis (art. 1.003, §5º, c/c art. 219 do CPC). Se a parte for pessoa jurídica de direito público ou Ministério Público, o prazo é em dobro (30 dias úteis). Informe o tipo de prazo antes de preencher as datas.
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 14px;">
+      <div class="field">
+        <label>Tipo de prazo</label>
+        <select id="tipo-prazo" onchange="calcularTempestividade()">
+          <option value="15">Prazo comum — 15 dias úteis</option>
+          <option value="30">Prazo em dobro — 30 dias úteis (Fazenda Pública / MP)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Modalidade de intimação</label>
+        <select id="modalidade-intimacao" onchange="calcularTempestividade()">
+          <option value="">— selecione —</option>
+          <option value="Diário de Justiça Eletrônico (DJe)">Diário de Justiça Eletrônico (DJe)</option>
+          <option value="Intimação via sistema (e-Proc)">Intimação via sistema (e-Proc)</option>
+          <option value="Intimação pessoal (mandado / oficial)">Intimação pessoal (mandado / oficial)</option>
+          <option value="Intimação por carta com AR">Intimação por carta com AR</option>
+          <option value="Modalidade não informada">Modalidade não informada</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="field">
+        <label>Data da intimação</label>
+        <input type="date" id="data-intimacao" onchange="calcularTempestividade()">
+        <p class="helper-text">Data da publicação ou da juntada do AR</p>
+      </div>
+      <div class="field">
+        <label>Início da contagem</label>
+        <input type="date" id="data-inicio" onchange="calcularTempestividade()">
+        <p class="helper-text">Primeiro dia útil após a intimação</p>
+      </div>
+      <div class="field">
+        <label>Fim do prazo</label>
+        <input type="date" id="data-fim" onchange="calcularTempestividade()">
+        <p class="helper-text">Último dia útil do prazo</p>
+      </div>
+      <div class="field">
+        <label>Data do protocolo</label>
+        <input type="date" id="data-protocolo" onchange="calcularTempestividade()">
+        <p class="helper-text">Data em que o recurso foi protocolado</p>
+      </div>
+    </div>
+
+    <div id="resultado-tempestividade" class="tempestividade-resultado incompleto">
+      Preencha todas as datas para verificar a tempestividade.
+    </div>
+
+    <div id="aviso-dobro" class="warning-box">
+      ⚠ Atenção: prazo em dobro selecionado. Verifique se a parte apelante é de fato pessoa jurídica de direito público ou o Ministério Público, pois a aplicação indevida do prazo em dobro implica intempestividade a ser reconhecida de ofício.
+    </div>
+  </div>
+
+  <!-- ADICIONAR EVENTO -->
+  <div class="section">
+    <p class="section-title">Adicionar ato processual</p>
+
+    <div class="info-box" style="margin-bottom: 1rem;">
+      Se o processo teve tramitação em <strong>primeiro grau</strong> antes de subir ao tribunal, registre os atos de cada fase separadamente usando o campo <em>Fase processual</em> abaixo. Assim, a numeração dos eventos pode reiniciar no 2º grau sem prejudicar a sequência — o formulário agrupa e identifica cada fase na saída.
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 0;">
+      <div class="field">
+        <label>Fase processual <span class="required-mark">*</span></label>
+        <select id="ev-fase">
+          <option value="1grau">1º Grau — Processo de Origem</option>
+          <option value="2grau">2º Grau — Recurso / Tribunal</option>
+        </select>
+        <p class="helper-text">Selecione a fase à qual pertence este ato. Eventos do 2º grau são agrupados separadamente na saída, mesmo que a numeração recomece no 01.</p>
+      </div>
+      <div class="field">
+        <label>Data do ato</label>
+        <input type="date" id="ev-data">
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Nº do evento <span class="required-mark">*</span></label>
+        <input type="number" id="ev-num" placeholder="Ex.: 7" min="1">
+      </div>
+      <div class="field">
+        <label>Descrição do ato <span class="required-mark">*</span></label>
+        <input type="text" id="ev-desc" placeholder="Ex.: Sentença, Petição Inicial, Apelação, Despacho de emenda...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tipo de peça</label>
+      <select id="ev-tipo">
+        <option value="">— selecione (opcional) —</option>
+        <option>Petição inicial</option>
+        <option>Contestação</option>
+        <option>Despacho de emenda da inicial</option>
+        <option>Resposta à determinação de emenda</option>
+        <option>Pedido de dilação de prazo</option>
+        <option>Decisão sobre pedido de dilação</option>
+        <option>Certidão de não cumprimento</option>
+        <option>Certidão de múltiplas ações</option>
+        <option>Sentença</option>
+        <option>Embargos de declaração</option>
+        <option>Decisão nos embargos de declaração</option>
+        <option>Apelação (razões recursais)</option>
+        <option>Contrarrazões de apelação</option>
+        <option>Decisão interlocutória</option>
+        <option>Certidão</option>
+        <option>Outro</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Teor / transcrição do documento <span class="required-mark">*</span></label>
+      <textarea id="ev-teor" style="min-height: 150px;" placeholder="Cole ou transcreva aqui o conteúdo integral do ato processual, conforme consta no e-Proc. Não é necessário resumir."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Observação sobre esta peça (ausência, ilegibilidade, incompletude)</label>
+      <input type="text" id="ev-obs" placeholder="Ex.: documento ilegível / apenas parte do texto disponível / peça não localizada no e-Proc">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="adicionarEvento()">+ Adicionar ato</button>
+      <button class="btn" onclick="limparFormEvento()">Limpar campos</button>
+    </div>
+  </div>
+
+  <!-- LISTA DE EVENTOS -->
+  <div id="secao-eventos" class="section" style="display:none;">
+    <p class="section-title">Atos adicionados</p>
+    <div class="eventos-lista" id="lista-eventos"></div>
+  </div>
+
+  <!-- SAÍDA -->
+  <div class="section">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;">
+      <p class="section-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Texto estruturado gerado</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-download" onclick="baixarTXT()">&#8595; Baixar .txt</button>
+        <button class="btn" onclick="copiarTexto()">Copiar</button>
+        <button class="btn btn-danger" onclick="reiniciarTudo()">Reiniciar formulário</button>
+      </div>
+    </div>
+    <div class="output-preview" id="output"><span class="empty-hint">O texto estruturado aparecerá aqui à medida que você preencher os campos e adicionar os atos processuais.</span></div>
+    <p class="helper-text" style="margin-top: 8px;">Clique em "Baixar .txt" para salvar o arquivo no seu computador. Em seguida, abra o arquivo, selecione todo o texto (Ctrl+A), copie (Ctrl+C) e cole na conversa com o assistente.</p>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var eventos = [];
+
+  var TIPOS_RECURSO = {
+    'apelacao':            { label: 'Apelação Cível',           parte1: 'Parte apelante',    parte2: 'Parte apelada',      fase2: 'Apelação Cível' },
+    'agravo-instrumento':  { label: 'Agravo de Instrumento',    parte1: 'Parte agravante',   parte2: 'Parte agravada',     fase2: 'Agravo de Instrumento' },
+    'agravo-interno':      { label: 'Agravo Interno',           parte1: 'Parte agravante',   parte2: 'Parte agravada',     fase2: 'Agravo Interno' },
+    'embargos-declaracao': { label: 'Embargos de Declaração',   parte1: 'Parte embargante',  parte2: 'Parte embargada',    fase2: 'Embargos de Declaração' },
+    'mandado-seguranca':   { label: 'Mandado de Segurança',     parte1: 'Impetrante',        parte2: 'Autoridade coatora', fase2: 'Mandado de Segurança' },
+    'outro':               { label: 'Outro',                    parte1: 'Parte (polo ativo)', parte2: 'Parte (polo passivo)', fase2: '2º Grau' }
+  };
+
+  function tipoAtual() {
+    var v = document.getElementById('tipo-recurso').value;
+    return TIPOS_RECURSO[v] || TIPOS_RECURSO['apelacao'];
+  }
+
+  function atualizarLabelsPartes() {
+    var t = tipoAtual();
+    document.getElementById('label-parte1').textContent = t.parte1;
+    document.getElementById('label-parte2').textContent = t.parte2;
+    var sel = document.getElementById('ev-fase');
+    sel.options[1].text = '2º Grau — ' + t.fase2;
+  }
+
+  function formatarData(d) {
+    if (!d) return 'data não informada';
+    var p = d.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  function calcularTempestividade() {
+    var prazo = parseInt(document.getElementById('tipo-prazo').value || '15');
+    var dataFim = document.getElementById('data-fim').value;
+    var dataProt = document.getElementById('data-protocolo').value;
+    var dataInt = document.getElementById('data-intimacao').value;
+    var dataIni = document.getElementById('data-inicio').value;
+    var modal = document.getElementById('modalidade-intimacao').value;
+    var res = document.getElementById('resultado-tempestividade');
+    var aviso = document.getElementById('aviso-dobro');
+
+    aviso.classList.toggle('visible', prazo === 30);
+
+    if (!dataFim || !dataProt) {
+      res.className = 'tempestividade-resultado incompleto';
+      res.textContent = 'Preencha a data de fim do prazo e a data do protocolo para verificar a tempestividade.';
+      atualizarOutput();
+      return;
+    }
+
+    var fim = new Date(dataFim + 'T12:00:00');
+    var prot = new Date(dataProt + 'T12:00:00');
+
+    var diffMs = prot - fim;
+    var diffDias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (prot <= fim) {
+      res.className = 'tempestividade-resultado tempestivo';
+      if (diffDias === 0) {
+        res.textContent = '✓ Recurso aparentemente tempestivo — protocolado no último dia do prazo (' + formatarData(dataProt) + ').';
+      } else {
+        res.textContent = '✓ Recurso aparentemente tempestivo — protocolado em ' + formatarData(dataProt) + ', dentro do prazo (vencimento em ' + formatarData(dataFim) + ').';
+      }
+    } else {
+      res.className = 'tempestividade-resultado intempestivo';
+      res.textContent = '✗ Recurso possivelmente intempestivo — protocolado em ' + formatarData(dataProt) + ', ' + Math.abs(diffDias) + ' dia(s) após o vencimento do prazo (' + formatarData(dataFim) + '). Verifique feriados, suspensões e eventuais prorrogações antes de concluir pela intempestividade.';
+    }
+
+    atualizarOutput();
+  }
+
+  function adicionarEvento() {
+    var num = document.getElementById('ev-num').value.trim();
+    var desc = document.getElementById('ev-desc').value.trim();
+    var data = document.getElementById('ev-data').value;
+    var tipo = document.getElementById('ev-tipo').value;
+    var teor = document.getElementById('ev-teor').value.trim();
+    var obs = document.getElementById('ev-obs').value.trim();
+    var fase = document.getElementById('ev-fase').value;
+
+    if (!num || !desc || !teor) {
+      mostrarToast('Preencha o número do evento, a descrição e o teor do documento.', true);
+      return;
+    }
+
+    eventos.push({ num: parseInt(num), desc: desc, data: data, tipo: tipo, teor: teor, obs: obs, fase: fase });
+    eventos.sort(function(a, b) {
+      if (a.fase !== b.fase) return a.fase === '1grau' ? -1 : 1;
+      return a.num - b.num;
+    });
+    limparFormEvento();
+    renderLista();
+    atualizarOutput();
+    mostrarToast('Ato adicionado com sucesso.');
+  }
+
+  function limparFormEvento() {
+    ['ev-num', 'ev-desc', 'ev-data', 'ev-tipo', 'ev-teor', 'ev-obs'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+  }
+
+  function removerEvento(idx) {
+    if (!confirm('Remover este ato?')) return;
+    eventos.splice(idx, 1);
+    renderLista();
+    atualizarOutput();
+  }
+
+  function faseLegenda(fase) {
+    return fase === '1grau' ? '1º Grau' : '2º Grau';
+  }
+
+  function renderLista() {
+    var sec = document.getElementById('secao-eventos');
+    var el = document.getElementById('lista-eventos');
+    if (eventos.length === 0) { sec.style.display = 'none'; el.innerHTML = ''; return; }
+    sec.style.display = 'block';
+    var html = '';
+    var faseAtual = null;
+    eventos.forEach(function(ev, i) {
+      if (ev.fase !== faseAtual) {
+        faseAtual = ev.fase;
+        var faseLabel = faseAtual === '1grau'
+          ? '1º Grau — Processo de Origem'
+          : '2º Grau — ' + tipoAtual().fase2;
+        html += '<div style="font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.06em;margin:10px 0 6px;padding-left:2px;">' + escHtml(faseLabel) + '</div>';
+      }
+      var teaser = ev.teor.length > 100 ? ev.teor.substring(0, 100) + '…' : ev.teor;
+      var tipoStr = ev.tipo ? ' [' + ev.tipo + ']' : '';
+      var metaStr = (ev.data ? formatarData(ev.data) : 'sem data') + tipoStr;
+      html += '<div class="evento-item">';
+      html += '<span class="evento-badge">Ev. ' + ev.num + '</span>';
+      html += '<div class="evento-info">';
+      html += '<div class="evento-desc">' + escHtml(ev.desc) + '</div>';
+      html += '<div class="evento-meta">' + escHtml(metaStr) + '</div>';
+      html += '<div class="evento-teaser">' + escHtml(teaser) + '</div>';
+      if (ev.obs) html += '<div class="evento-obs-badge">⚠ ' + escHtml(ev.obs) + '</div>';
+      html += '</div>';
+      html += '<button class="btn-del" onclick="removerEvento(' + i + ')" title="Remover">×</button>';
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function gerarTexto() {
+    var t = tipoAtual();
+    var proc = document.getElementById('num-processo').value.trim();
+    var vara = document.getElementById('vara').value.trim();
+    var parte1 = document.getElementById('apelante').value.trim();
+    var parte2 = document.getElementById('apelada').value.trim();
+    var gratuidade = document.getElementById('gratuidade').value;
+    var categoria = document.getElementById('categoria').value;
+    var obsGerais = document.getElementById('obs-gerais').value.trim();
+
+    var prazo = document.getElementById('tipo-prazo').value;
+    var prazoLabel = prazo === '30' ? '30 dias úteis (dobro — Fazenda Pública / MP)' : '15 dias úteis (prazo comum)';
+    var modal = document.getElementById('modalidade-intimacao').value;
+    var dataInt = document.getElementById('data-intimacao').value;
+    var dataIni = document.getElementById('data-inicio').value;
+    var dataFim = document.getElementById('data-fim').value;
+    var dataProt = document.getElementById('data-protocolo').value;
+
+    var resEl = document.getElementById('resultado-tempestividade');
+    var conclusaoTemp = resEl.textContent.trim();
+
+    var linhas = [];
+    linhas.push('================================================================');
+    linhas.push('ENTRADA PROCESSUAL ESTRUTURADA — ' + t.label.toUpperCase());
+    linhas.push('GABINETE DRA. ODETE BATISTA DIAS ALMEIDA — TJTO');
+    linhas.push('================================================================');
+    linhas.push('');
+
+    linhas.push('--- IDENTIFICAÇÃO DO PROCESSO ---');
+    if (proc) linhas.push('Número do processo: ' + proc);
+    if (vara) linhas.push('Comarca / Vara de origem: ' + vara);
+    linhas.push('Tipo de recurso / processo: ' + t.label);
+    if (parte1) linhas.push(t.parte1 + ': ' + parte1);
+    if (parte2) linhas.push(t.parte2 + ': ' + parte2);
+    if (gratuidade) linhas.push('Gratuidade de justiça: ' + gratuidade);
+    if (categoria) linhas.push('Categoria (matriz decisória): ' + categoria);
+    if (obsGerais) {
+      linhas.push('');
+      linhas.push('Observações gerais: ' + obsGerais);
+    }
+    linhas.push('');
+
+    linhas.push('--- TEMPESTIVIDADE DO RECURSO ---');
+    linhas.push('Tipo de prazo: ' + prazoLabel);
+    if (modal) linhas.push('Modalidade de intimação: ' + modal);
+    linhas.push('Data da intimação: ' + (dataInt ? formatarData(dataInt) : 'não informada'));
+    linhas.push('Início da contagem do prazo: ' + (dataIni ? formatarData(dataIni) : 'não informado'));
+    linhas.push('Fim do prazo: ' + (dataFim ? formatarData(dataFim) : 'não informado'));
+    linhas.push('Data do protocolo do recurso: ' + (dataProt ? formatarData(dataProt) : 'não informada'));
+    linhas.push('Conclusão automática do formulário: ' + conclusaoTemp);
+    linhas.push('');
+    linhas.push('[ATENÇÃO AO ASSISTENTE: verificar tempestividade considerando eventuais feriados,');
+    linhas.push('suspensões de prazo (art. 220 CPC), plantões ou outras intercorrências não');
+    linhas.push('capturadas pelo formulário. A conclusão acima é meramente indicativa.]');
+    linhas.push('');
+
+    if (eventos.length > 0) {
+      var ev1grau = eventos.filter(function(e) { return e.fase === '1grau'; });
+      var ev2grau = eventos.filter(function(e) { return e.fase === '2grau'; });
+
+      function imprimirEventos(lista) {
+        lista.forEach(function(ev) {
+          var tipo = ev.tipo ? ' [' + ev.tipo + ']' : '';
+          linhas.push('--- EVENTO ' + ev.num + ' — ' + ev.desc + tipo + ' — ' + formatarData(ev.data) + ' ---');
+          if (ev.obs) linhas.push('[ATENÇÃO: ' + ev.obs + ']');
+          linhas.push('');
+          linhas.push(ev.teor);
+          linhas.push('');
+        });
+      }
+
+      if (ev1grau.length > 0) {
+        linhas.push('--- ATOS PROCESSUAIS — 1º GRAU (PROCESSO DE ORIGEM) ---');
+        linhas.push('');
+        imprimirEventos(ev1grau);
+      }
+
+      if (ev2grau.length > 0) {
+        linhas.push('--- ATOS PROCESSUAIS — 2º GRAU (' + t.fase2.toUpperCase() + ') ---');
+        linhas.push('[NOTA: a numeração dos eventos abaixo é independente da série do 1º grau,');
+        linhas.push('pois o e-Proc/TJTO reinicia a contagem ao receber o processo no tribunal.]');
+        linhas.push('');
+        imprimirEventos(ev2grau);
+      }
+
+      if (ev1grau.length === 0 && ev2grau.length === 0) {
+        linhas.push('--- ATOS PROCESSUAIS ---');
+        linhas.push('[Nenhum ato processual adicionado ainda.]');
+        linhas.push('');
+      }
+    } else {
+      linhas.push('--- ATOS PROCESSUAIS ---');
+      linhas.push('[Nenhum ato processual adicionado ainda.]');
+      linhas.push('');
+    }
+
+    linhas.push('================================================================');
+    linhas.push('FIM DA ENTRADA PROCESSUAL');
+    linhas.push('================================================================');
+
+    return linhas.join('\n');
+  }
+
+  function atualizarOutput() {
+    var proc = document.getElementById('num-processo').value.trim();
+    var el = document.getElementById('output');
+    if (!proc && eventos.length === 0) {
+      el.innerHTML = '<span class="empty-hint">O texto estruturado aparecerá aqui à medida que você preencher os campos e adicionar os atos processuais.</span>';
+      return;
+    }
+    el.textContent = gerarTexto();
+  }
+
+  function baixarTXT() {
+    var proc = document.getElementById('num-processo').value.trim();
+    if (!proc && eventos.length === 0) {
+      mostrarToast('Preencha ao menos o número do processo antes de baixar.', true);
+      return;
+    }
+    var texto = gerarTexto();
+    var nome = proc ? 'entrada_processual_' + proc.replace(/[^0-9]/g, '') + '.txt' : 'entrada_processual.txt';
+    var blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    mostrarToast('Arquivo .txt baixado com sucesso.');
+  }
+
+  function copiarTexto() {
+    var texto = gerarTexto();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(texto).then(function() {
+        mostrarToast('Texto copiado para a área de transferência.');
+      });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = texto;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      mostrarToast('Texto copiado para a área de transferência.');
+    }
+  }
+
+  function reiniciarTudo() {
+    if (!confirm('Deseja reiniciar completamente o formulário? Todos os dados serão apagados.')) return;
+    eventos = [];
+    ['num-processo','vara','apelante','apelada','obs-gerais',
+     'ev-num','ev-desc','ev-data','ev-tipo','ev-teor','ev-obs',
+     'data-intimacao','data-inicio','data-fim','data-protocolo'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('gratuidade').value = '';
+    document.getElementById('categoria').value = '';
+    document.getElementById('tipo-prazo').value = '15';
+    document.getElementById('modalidade-intimacao').value = '';
+    document.getElementById('tipo-recurso').value = 'apelacao';
+    document.getElementById('ev-fase').value = '1grau';
+    atualizarLabelsPartes();
+    document.getElementById('resultado-tempestividade').className = 'tempestividade-resultado incompleto';
+    document.getElementById('resultado-tempestividade').textContent = 'Preencha todas as datas para verificar a tempestividade.';
+    document.getElementById('aviso-dobro').classList.remove('visible');
+    renderLista();
+    atualizarOutput();
+    mostrarToast('Formulário reiniciado.');
+  }
+
+  function mostrarToast(msg, erro) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = erro ? '#8b1c1c' : '#1a6b3a';
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2800);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    atualizarLabelsPartes();
+    ['num-processo','vara','apelante','apelada','gratuidade','categoria','obs-gerais',
+     'tipo-prazo','modalidade-intimacao','data-intimacao','data-inicio','data-fim','data-protocolo',
+     'tipo-recurso'
+    ].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', atualizarOutput);
+        el.addEventListener('input', atualizarOutput);
+      }
+    });
+  });
+</script>
+</body>
+</html>

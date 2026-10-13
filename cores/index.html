@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leitor de Cores</title>
+<meta name="description" content="Identifica cores pela câmera do celular e ajuda a escolher frutas, para pessoas com daltonismo vermelho-verde.">
+<meta name="theme-color" content="#111418">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cores">
+<style>
+  :root {
+    --bg: #111418; --panel: #1b2027; --line: #2e3540; --text: #f4f5f7;
+    --muted: #b4bcc8; --accent: #4da3ff; --accent-text: #08121f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 17px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .tabs { display: flex; gap: 6px; padding: 8px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .tabs button { flex: 1; padding: 10px 4px; border: 2px solid var(--line); background: transparent;
+    border-radius: 10px; font-weight: 600; }
+  .tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .view { position: relative; flex: 1; min-height: 0; background: #000; overflow: hidden; }
+  .view video, .view img, .view canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .view canvas { image-rendering: pixelated; }
+  .target { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    border: 3px solid #fff; box-shadow: 0 0 0 2px #000, inset 0 0 0 2px #000; border-radius: 6px; pointer-events: none; }
+  .start { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 24px; text-align: center; background: var(--bg); }
+  .start h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  .start p { margin: 0; color: var(--muted); max-width: 30em; }
+  .big { padding: 14px 22px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-text);
+    font-weight: 700; font-size: 1.1rem; min-width: 220px; }
+  .big.secondary { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .panel { background: var(--panel); border-top: 1px solid var(--line); padding: 12px 14px 10px; }
+  .sub { display: flex; gap: 6px; margin-bottom: 10px; }
+  .sub button { flex: 1; padding: 8px 4px; border: 2px solid var(--line); background: transparent; border-radius: 8px; font-size: .95rem; }
+  .sub button[aria-pressed="true"] { border-color: var(--text); font-weight: 700; }
+  .result { display: flex; gap: 12px; align-items: flex-start; min-height: 6.2em; }
+  .swatch { flex: none; width: 54px; height: 54px; border-radius: 10px; border: 2px solid var(--line); }
+  .title { font-size: 1.7rem; font-weight: 750; line-height: 1.15; overflow-wrap: anywhere; }
+  .line { color: var(--muted); font-size: .98rem; margin-top: 3px; }
+  .warn { color: var(--text); font-size: .95rem; margin-top: 4px; font-style: italic; }
+  .actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .actions button { flex: 1 1 22%; padding: 10px 4px; border-radius: 10px; border: 2px solid var(--line);
+    background: transparent; font-size: .95rem; font-weight: 600; min-width: 70px; }
+  .actions button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .hidden { display: none !important; }
+  .toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(0,0,0,.85);
+    color: #fff; padding: 10px 14px; border-radius: 10px; font-size: .95rem; max-width: 90%; text-align: center; }
+  .help { position: absolute; inset: 0; background: var(--bg); overflow-y: auto; padding: 18px 18px 30px; }
+  .help h2 { margin: 0 0 8px; font-size: 1.3rem; }
+  .help h3 { margin: 18px 0 4px; font-size: 1.05rem; }
+  .help p { margin: 6px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+  <nav class="tabs" aria-label="Modos">
+    <button data-mode="cor" aria-pressed="true">Cor</button>
+    <button data-mode="fruta" aria-pressed="false">Frutas</button>
+    <button data-mode="destaque" aria-pressed="false">Destaque</button>
+    <button data-mode="ajuda" aria-pressed="false" aria-label="Ajuda">?</button>
+  </nav>
+
+  <main class="view" id="view">
+    <video id="video" playsinline muted autoplay></video>
+    <img id="photo" class="hidden" alt="Foto escolhida">
+    <canvas id="overlay" class="hidden"></canvas>
+    <div class="target" id="target"></div>
+    <div class="toast hidden" id="toast" role="status"></div>
+
+    <section class="start" id="start">
+      <h1>Leitor de Cores</h1>
+      <p>Aponte a câmera para um objeto e veja o nome da cor, o ponto de maturação de bananas e peras, ou onde há vermelho e verde na imagem.</p>
+      <button class="big" id="btnCamera">Abrir câmera</button>
+      <button class="big secondary" id="btnPhoto">Usar uma foto</button>
+      <p id="startMsg"></p>
+    </section>
+
+    <section class="help hidden" id="help">
+      <h2>Como usar</h2>
+      <p>Nada aqui depende de distinguir cores na tela: as respostas aparecem sempre por escrito e podem ser ouvidas no botão Ouvir.</p>
+      <h3>Cor</h3>
+      <p>Centralize o objeto no quadrado branco. O aplicativo informa o nome da cor e o grupo a que ela pertence. Quando a cor está na fronteira entre dois grupos, ele avisa que pode ser também a outra.</p>
+      <h3>Frutas</h3>
+      <p>Escolha banana ou pera e aproxime o celular até a casca preencher o retângulo. Na banana, a cor é um bom sinal de maturação. Na pera, a cor ajuda pouco, porque muitas variedades continuam verdes mesmo maduras; o mais confiável é apertar de leve a parte estreita perto do cabo.</p>
+      <h3>Destaque</h3>
+      <p>Mostra listras diagonais em preto e branco sobre tudo o que é vermelho e listras horizontais sobre tudo o que é verde. Use para tomates, luzes de carregadores, gráficos e mapas.</p>
+      <h3>Calibrar</h3>
+      <p>A luz do ambiente muda as cores. Supermercados costumam usar luz quente ou rosada nas bancas de frutas. Para corrigir, aponte para algo branco, como uma folha de papel, uma sacola ou uma etiqueta, e toque em Calibrar. Faça isso sempre que mudar de lugar.</p>
+      <p><button class="big secondary" id="btnClearCalib">Apagar calibração</button></p>
+      <h3>Limites</h3>
+      <p>A câmera do celular não mede a cor com exatidão. Pouca luz, sombras, reflexos e o ajuste automático da câmera podem causar erros. Em decisões importantes, como fios elétricos, não confie apenas no aplicativo.</p>
+      <h3>Privacidade</h3>
+      <p>As imagens são analisadas no próprio celular. Nada é gravado nem enviado para a internet.</p>
+    </section>
+  </main>
+
+  <section class="panel" id="panel">
+    <div class="sub hidden" id="subFruta">
+      <button data-fruit="banana" aria-pressed="true">Banana</button>
+      <button data-fruit="pera" aria-pressed="false">Pera</button>
+    </div>
+    <div class="sub hidden" id="subDestaque">
+      <button data-hl="ambos" aria-pressed="true">Ambos</button>
+      <button data-hl="vermelho" aria-pressed="false">Vermelhos</button>
+      <button data-hl="verde" aria-pressed="false">Verdes</button>
+    </div>
+    <div class="result">
+      <div class="swatch" id="swatch" aria-hidden="true"></div>
+      <div>
+        <div class="title" id="title">—</div>
+        <div class="line" id="line1"></div>
+        <div class="line" id="line2"></div>
+        <div class="warn" id="warn"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="btnSpeak">Ouvir</button>
+      <button id="btnPause" aria-pressed="false">Pausar</button>
+      <button id="btnCalib">Calibrar</button>
+      <button id="btnTorch" class="hidden" aria-pressed="false">Lanterna</button>
+      <button id="btnNewPhoto" class="hidden">Outra foto</button>
+    </div>
+  </section>
+
+  <input type="file" id="file" accept="image/*" capture="environment" class="hidden">
+
+<script src="cores.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const video = $('video'), photo = $('photo'), overlay = $('overlay'), view = $('view');
+  const work = document.createElement('canvas');
+  const wctx = work.getContext('2d', { willReadFrequently: true });
+  const octx = overlay.getContext('2d');
+
+  const state = {
+    mode: 'cor', fruit: 'banana', hl: 'ambos', paused: false,
+    source: null, stream: null, track: null, torch: false,
+    gains: null, luts: Cores.makeLuts(null), avg: null, lastSpoken: '', last: null
+  };
+
+  function store(key, val) { try { val == null ? localStorage.removeItem(key) : localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  function load(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
+
+  const saved = load('cores.gains');
+  if (Array.isArray(saved) && saved.length === 3) { state.gains = saved; state.luts = Cores.makeLuts(saved); }
+  const savedMode = load('cores.mode');
+  updateCalibLabel();
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
+  }
+
+  function updateCalibLabel() { $('btnCalib').textContent = state.gains ? 'Calibrado ✓' : 'Calibrar'; }
+
+  // ---------- Fonte da imagem (câmera ou foto) ----------
+  async function startCamera() {
+    $('startMsg').textContent = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      $('startMsg').textContent = 'Este navegador não permite usar a câmera aqui. Use a opção de foto.';
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      state.stream = stream; state.track = stream.getVideoTracks()[0];
+      video.srcObject = stream;
+      await video.play().catch(() => {});
+      state.source = 'video';
+      photo.classList.add('hidden'); video.classList.remove('hidden');
+      $('start').classList.add('hidden'); $('btnNewPhoto').classList.add('hidden');
+      const caps = state.track.getCapabilities ? state.track.getCapabilities() : {};
+      $('btnTorch').classList.toggle('hidden', !caps.torch);
+    } catch (e) {
+      $('startMsg').textContent = 'Não foi possível abrir a câmera. Verifique se o navegador tem permissão para usá-la, ou use a opção de foto.';
+    }
+  }
+
+  function choosePhoto() { $('file').value = ''; $('file').click(); }
+  $('file').addEventListener('change', () => {
+    const f = $('file').files && $('file').files[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    photo.onload = () => {
+      if (state.stream) { state.stream.getTracks().forEach(t => t.stop()); state.stream = null; state.track = null; }
+      state.source = 'photo';
+      video.classList.add('hidden'); photo.classList.remove('hidden');
+      $('start').classList.add('hidden'); $('btnTorch').classList.add('hidden');
+      $('btnNewPhoto').classList.remove('hidden');
+      setPaused(false);
+    };
+    photo.src = url;
+  });
+
+  // Recorta da imagem a mesma área que aparece na tela (object-fit: cover).
+  function grab(maxW) {
+    const ew = view.clientWidth, eh = view.clientHeight;
+    let src, sw, sh;
+    if (state.source === 'video') { src = video; sw = video.videoWidth; sh = video.videoHeight; }
+    else if (state.source === 'photo') { src = photo; sw = photo.naturalWidth; sh = photo.naturalHeight; }
+    if (!src || !sw || !sh || !ew || !eh) return null;
+    const s = Math.max(ew / sw, eh / sh);
+    const vw = ew / s, vh = eh / s, vx = (sw - vw) / 2, vy = (sh - vh) / 2;
+    const w = Math.round(Math.min(maxW, ew)), h = Math.round(w * eh / ew);
+    if (work.width !== w || work.height !== h) { work.width = w; work.height = h; }
+    wctx.drawImage(src, vx, vy, vw, vh, 0, 0, w, h);
+    return { w: w, h: h };
+  }
+
+  // Tamanho do quadro alvo, em fração da área visível.
+  function targetBox() {
+    if (state.mode === 'cor') return { fw: 0.09, fh: 0.09, square: true };
+    if (state.mode === 'fruta') return state.fruit === 'banana' ? { fw: 0.7, fh: 0.22 } : { fw: 0.45, fh: 0.3 };
+    return null;
+  }
+
+  function layoutTarget() {
+    const b = targetBox(), t = $('target');
+    if (!b) { t.classList.add('hidden'); return; }
+    t.classList.remove('hidden');
+    const ew = view.clientWidth, eh = view.clientHeight;
+    if (b.square) { const side = Math.max(36, Math.min(ew, eh) * b.fw * 1.2); t.style.width = t.style.height = side + 'px'; }
+    else { t.style.width = ew * b.fw + 'px'; t.style.height = eh * b.fh + 'px'; }
+  }
+
+  function rectFor(dim) {
+    const b = targetBox();
+    if (b.square) {
+      const side = Math.max(4, Math.round(Math.min(dim.w, dim.h) * b.fw));
+      return { x: Math.round((dim.w - side) / 2), y: Math.round((dim.h - side) / 2), w: side, h: side };
+    }
+    const w = Math.round(dim.w * b.fw), h = Math.round(dim.h * b.fh);
+    return { x: Math.round((dim.w - w) / 2), y: Math.round((dim.h - h) / 2), w: w, h: h };
+  }
+
+  // ---------- Exibição ----------
+  function show(r) {
+    state.last = r;
+    $('title').textContent = r.title || '—';
+    $('line1').textContent = r.line1 || '';
+    $('line2').textContent = r.line2 || '';
+    $('warn').textContent = r.warn || '';
+    $('swatch').style.background = r.swatch || 'transparent';
+    $('swatch').classList.toggle('hidden', !r.swatch);
+  }
+
+  function speakText() {
+    const r = state.last;
+    if (!r) return '';
+    return [r.title, r.line1, r.speakExtra !== undefined ? r.speakExtra : r.line2, r.warn].filter(Boolean).join('. ');
+  }
+
+  // ---------- Processamento de cada modo ----------
+  function processCor() {
+    const dim = grab(320); if (!dim) return;
+    const rc = rectFor(dim);
+    const img = wctx.getImageData(rc.x, rc.y, rc.w, rc.h);
+    const a = Cores.averageRegion(img.data, rc.w, 0, 0, rc.w, rc.h, state.luts);
+    if (!a) return;
+    // Suaviza a leitura para o texto não ficar trocando a todo momento.
+    const k = 0.35;
+    state.avg = state.avg ? { r: state.avg.r + (a.r - state.avg.r) * k, g: state.avg.g + (a.g - state.avg.g) * k, b: state.avg.b + (a.b - state.avg.b) * k } : a;
+    const c = Cores.nameColor(state.avg.r, state.avg.g, state.avg.b);
+    let warn = '';
+    const raw = Cores.averageRegion(img.data, rc.w, 0, 0, rc.w, rc.h, null);
+    if (raw && Math.max(raw.r, raw.g, raw.b) < 40) warn = 'Pouca luz: a leitura pode estar errada.';
+    else if (a.spread > 38) warn = 'Há mais de uma cor no quadrado. Aproxime o celular.';
+    show({
+      title: c.name,
+      line1: 'Grupo: ' + c.group,
+      line2: c.alt ? 'Está perto do limite; pode ser também: ' + c.alt + '.' : '',
+      warn: warn,
+      swatch: 'rgb(' + Math.round(state.avg.r) + ',' + Math.round(state.avg.g) + ',' + Math.round(state.avg.b) + ')'
+    });
+  }
+
+  function processFruta() {
+    const dim = grab(240); if (!dim) return;
+    const rc = rectFor(dim);
+    const img = wctx.getImageData(rc.x, rc.y, rc.w, rc.h);
+    const counts = Cores.fruitCounts(img.data, rc.w, 0, 0, rc.w, rc.h, state.luts);
+    const r = Cores.ripeness(state.fruit, counts);
+    const nome = state.fruit === 'banana' ? 'Banana' : 'Pera';
+    show({
+      title: r.ok ? nome + ': ' + r.title : r.title,
+      line1: r.text,
+      line2: r.ok ? r.detail : '',
+      speakExtra: '',
+      warn: state.gains ? '' : 'Dica: calibre com algo branco para mais precisão.'
+    });
+  }
+
+  function processDestaque() {
+    const dim = grab(240); if (!dim) return;
+    const img = wctx.getImageData(0, 0, dim.w, dim.h);
+    const f = Cores.highlight(img, state.luts, state.hl);
+    if (overlay.width !== dim.w || overlay.height !== dim.h) { overlay.width = dim.w; overlay.height = dim.h; }
+    octx.putImageData(img, 0, 0);
+    const parts = [];
+    if (state.hl !== 'verde') parts.push('Vermelho em ' + Math.round(f.red * 100) + '% da imagem (listras diagonais)');
+    if (state.hl !== 'vermelho') parts.push('Verde em ' + Math.round(f.green * 100) + '% da imagem (listras horizontais)');
+    let title;
+    if (state.hl === 'vermelho') title = f.red > 0.005 ? 'Há vermelho na imagem' : 'Nenhum vermelho encontrado';
+    else if (state.hl === 'verde') title = f.green > 0.005 ? 'Há verde na imagem' : 'Nenhum verde encontrado';
+    else title = 'Destaque ativo';
+    show({ title: title, line1: parts[0] || '', line2: parts[1] || '', warn: '', speakExtra: parts[1] || '' });
+  }
+
+  let lastTick = 0;
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (!state.source || state.paused || state.mode === 'ajuda') return;
+    if (t - lastTick < (state.mode === 'destaque' ? 80 : 120)) return;
+    lastTick = t;
+    try {
+      if (state.mode === 'cor') processCor();
+      else if (state.mode === 'fruta') processFruta();
+      else if (state.mode === 'destaque') processDestaque();
+    } catch (e) { /* um quadro com falha não deve parar o aplicativo */ }
+  }
+  requestAnimationFrame(loop);
+
+  // ---------- Controles ----------
+  function setMode(mode) {
+    state.mode = mode; state.avg = null;
+    store('cores.mode', mode === 'ajuda' ? null : mode);
+    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    $('help').classList.toggle('hidden', mode !== 'ajuda');
+    $('panel').classList.toggle('hidden', mode === 'ajuda');
+    $('subFruta').classList.toggle('hidden', mode !== 'fruta');
+    $('subDestaque').classList.toggle('hidden', mode !== 'destaque');
+    overlay.classList.toggle('hidden', mode !== 'destaque');
+    layoutTarget();
+    if (mode !== 'ajuda') show({ title: '—' });
+    if (state.paused && mode !== 'ajuda') { state.paused = false; refreshPause(); setPaused(true); }
+  }
+
+  function refreshPause() {
+    const p = state.paused;
+    $('btnPause').setAttribute('aria-pressed', String(p));
+    $('btnPause').textContent = p ? 'Continuar' : 'Pausar';
+  }
+
+  function setPaused(p) {
+    // Ao pausar, faz uma última leitura e congela a imagem.
+    if (p && state.source && state.mode !== 'ajuda') {
+      try {
+        if (state.mode === 'cor') { state.avg = null; processCor(); }
+        else if (state.mode === 'fruta') processFruta();
+        else processDestaque();
+      } catch (e) {}
+      if (state.source === 'video') video.pause();
+    } else if (!p && state.source === 'video') video.play().catch(() => {});
+    state.paused = p; refreshPause();
+  }
+
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  document.querySelectorAll('#subFruta button').forEach(b => b.addEventListener('click', () => {
+    state.fruit = b.dataset.fruit;
+    document.querySelectorAll('#subFruta button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    layoutTarget(); if (state.paused) setPaused(true);
+  }));
+  document.querySelectorAll('#subDestaque button').forEach(b => b.addEventListener('click', () => {
+    state.hl = b.dataset.hl;
+    document.querySelectorAll('#subDestaque button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (state.paused) setPaused(true);
+  }));
+
+  $('btnCamera').addEventListener('click', startCamera);
+  $('btnPhoto').addEventListener('click', choosePhoto);
+  $('btnNewPhoto').addEventListener('click', choosePhoto);
+  $('btnPause').addEventListener('click', () => setPaused(!state.paused));
+
+  $('btnSpeak').addEventListener('click', () => {
+    const text = speakText();
+    if (!text) return;
+    if (!('speechSynthesis' in window)) { toast('Este navegador não consegue ler em voz alta.'); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'pt-BR'; u.rate = 1;
+    speechSynthesis.speak(u);
+  });
+
+  $('btnCalib').addEventListener('click', calibrate);
+  $('btnClearCalib').addEventListener('click', () => {
+    state.gains = null; state.luts = Cores.makeLuts(null); store('cores.gains', null); updateCalibLabel();
+    toast('Calibração apagada.');
+  });
+
+  function calibrate() {
+    if (!state.source) { toast('Abra a câmera primeiro.'); return; }
+    const dim = grab(320); if (!dim) return;
+    const side = Math.round(Math.min(dim.w, dim.h) * 0.25);
+    const x = Math.round((dim.w - side) / 2), y = Math.round((dim.h - side) / 2);
+    const img = wctx.getImageData(x, y, side, side);
+    const a = Cores.averageRegion(img.data, side, 0, 0, side, side, null);
+    const g = a && Cores.gainsFromWhite(a.r, a.g, a.b);
+    if (!g || Math.max.apply(null, g) / Math.min.apply(null, g) > 3) {
+      toast('Não consegui calibrar. Aponte para algo branco, bem iluminado, ocupando o centro da tela.');
+      return;
+    }
+    state.gains = g; state.luts = Cores.makeLuts(g); state.avg = null;
+    store('cores.gains', g); updateCalibLabel();
+    toast('Calibrado. Refaça sempre que mudar de lugar ou de luz.');
+  }
+
+  $('btnTorch').addEventListener('click', async () => {
+    if (!state.track) return;
+    try {
+      state.torch = !state.torch;
+      await state.track.applyConstraints({ advanced: [{ torch: state.torch }] });
+      $('btnTorch').setAttribute('aria-pressed', String(state.torch));
+    } catch (e) { state.torch = false; toast('Não foi possível ligar a lanterna.'); }
+  });
+
+  window.addEventListener('resize', layoutTarget);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state.torch && state.track) {
+      state.torch = false; $('btnTorch').setAttribute('aria-pressed', 'false');
+      state.track.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+    }
+  });
+
+  setMode(savedMode === 'fruta' || savedMode === 'destaque' ? savedMode : 'cor');
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>

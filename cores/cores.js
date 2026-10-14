@@ -235,10 +235,95 @@
     return { red: reds / n, green: greens / n };
   }
 
+
+  // ---------- Camisa e gravata ----------
+  // Categorias de cor de roupa, com o nome no feminino (camisa, gravata).
+  const LABEL = {
+    'branco': 'branca', 'cinza-claro': 'cinza-clara (prata)', 'cinza': 'cinza', 'preto': 'preta',
+    'azul-claro': 'azul-clara', 'azul': 'azul', 'azul-marinho': 'azul-marinho', 'turquesa': 'turquesa',
+    'rosa': 'rosa', 'lilás': 'lilás', 'roxo': 'roxa', 'vermelho': 'vermelha', 'vinho': 'vinho (bordô)',
+    'bege': 'bege', 'marrom': 'marrom', 'laranja': 'laranja', 'amarelo': 'amarela (mostarda)',
+    'verde': 'verde', 'verde-oliva': 'verde-oliva'
+  };
+
+  function categorize(r, g, b) {
+    const c = hsv(r, g, b), n = nameColor(r, g, b);
+    if (n.group === 'neutro (sem cor)') {
+      if (n.name === 'preto') return 'preto';
+      if (n.name === 'branco') return 'branco';
+      if (n.name === 'cinza-claro') return 'cinza-claro';
+      return c.v < 0.2 ? 'preto' : 'cinza';
+    }
+    switch (FAMILIES[familyIndex(c.h)].key) {
+      case 'vermelho': return c.v < 0.5 ? 'vinho' : (c.s < 0.5 && c.v > 0.65 ? 'rosa' : 'vermelho');
+      case 'laranja': return c.v < 0.6 ? 'marrom' : (c.s < 0.4 ? 'bege' : 'laranja');
+      case 'amarelo': return c.v < 0.55 ? 'verde-oliva' : (c.s < 0.35 ? 'bege' : 'amarelo');
+      case 'amarelo-esverdeado': return c.v < 0.45 ? 'verde-oliva' : 'verde';
+      case 'verde': return 'verde';
+      case 'verde-azulado': return 'turquesa';
+      case 'azul': return c.v < 0.45 ? 'azul-marinho' : (c.s < 0.45 && c.v > 0.65 ? 'azul-claro' : 'azul');
+      case 'roxo': return c.s < 0.4 && c.v > 0.65 ? 'lilás' : 'roxo';
+      default: return c.v < 0.45 ? 'vinho' : 'rosa';
+    }
+  }
+
+  // Combinações usuais no vestuário masculino: gravatas recomendadas (em ordem)
+  // e gravatas a evitar, para cada cor de camisa.
+  const TIES = {
+    'branco': { good: ['azul-marinho', 'vinho', 'vermelho', 'azul', 'cinza', 'roxo', 'amarelo', 'preto'], avoid: ['branco', 'bege', 'cinza-claro'],
+      note: 'Camisa branca combina com quase todas as gravatas.' },
+    'cinza-claro': { good: ['azul-marinho', 'vinho', 'roxo', 'azul', 'rosa', 'vermelho', 'preto'], avoid: ['cinza-claro', 'branco', 'bege'] },
+    'cinza': { good: ['vinho', 'azul-marinho', 'roxo', 'rosa', 'lilás', 'preto'], avoid: ['cinza', 'marrom', 'bege'] },
+    'preto': { good: ['cinza-claro', 'branco', 'vinho', 'cinza'], avoid: ['azul-marinho', 'marrom'] },
+    'azul-claro': { good: ['azul-marinho', 'vinho', 'vermelho', 'amarelo', 'cinza', 'rosa', 'roxo', 'marrom'], avoid: ['azul-claro', 'turquesa', 'verde', 'branco'] },
+    'azul': { good: ['amarelo', 'vinho', 'cinza-claro', 'rosa', 'azul-marinho', 'laranja'], avoid: ['azul', 'turquesa', 'verde'] },
+    'azul-marinho': { good: ['amarelo', 'cinza-claro', 'rosa', 'lilás', 'vinho', 'azul-claro'], avoid: ['azul-marinho', 'preto', 'marrom'] },
+    'turquesa': { good: ['azul-marinho', 'cinza', 'marrom'], avoid: ['turquesa', 'verde', 'azul'] },
+    'rosa': { good: ['azul-marinho', 'cinza', 'vinho', 'roxo', 'azul'], avoid: ['rosa', 'vermelho', 'laranja', 'amarelo'] },
+    'lilás': { good: ['roxo', 'cinza', 'azul-marinho', 'vinho'], avoid: ['lilás', 'laranja', 'verde', 'amarelo'] },
+    'roxo': { good: ['cinza-claro', 'cinza', 'lilás', 'preto', 'azul-marinho'], avoid: ['roxo', 'laranja', 'verde', 'vermelho'] },
+    'vermelho': { good: ['cinza', 'preto', 'azul-marinho', 'branco'], avoid: ['vermelho', 'rosa', 'laranja', 'verde', 'roxo'] },
+    'vinho': { good: ['cinza-claro', 'cinza', 'rosa', 'azul-marinho'], avoid: ['vinho', 'vermelho', 'verde', 'laranja'] },
+    'bege': { good: ['marrom', 'azul-marinho', 'verde-oliva', 'vinho', 'verde'], avoid: ['bege', 'amarelo', 'branco', 'cinza-claro'] },
+    'marrom': { good: ['bege', 'azul-marinho', 'verde-oliva', 'laranja', 'amarelo'], avoid: ['marrom', 'preto', 'roxo'] },
+    'laranja': { good: ['azul-marinho', 'marrom', 'cinza', 'azul'], avoid: ['laranja', 'vermelho', 'rosa', 'roxo'] },
+    'amarelo': { good: ['azul-marinho', 'roxo', 'cinza', 'marrom', 'azul'], avoid: ['amarelo', 'laranja', 'bege', 'verde'] },
+    'verde': { good: ['vinho', 'azul-marinho', 'marrom', 'amarelo', 'cinza'], avoid: ['verde', 'vermelho', 'verde-oliva', 'turquesa'] },
+    'verde-oliva': { good: ['vinho', 'marrom', 'bege', 'azul-marinho', 'laranja'], avoid: ['verde-oliva', 'verde', 'preto'] }
+  };
+
+  function labels(list) { return list.map(function (k) { return LABEL[k]; }).join(', '); }
+
+  // Cor oposta no círculo cromático (complementar), só para cores com matiz.
+  function complement(r, g, b) {
+    const c = hsv(r, g, b), n = nameColor(r, g, b);
+    if (n.group === 'neutro (sem cor)' || c.s < 0.2) return null;
+    return FAMILIES[familyIndex((c.h + 180) % 360)].key;
+  }
+
+  function shirtAdvice(r, g, b) {
+    const cat = categorize(r, g, b), t = TIES[cat];
+    return { cat: cat, label: LABEL[cat], good: labels(t.good), avoid: labels(t.avoid), note: t.note || '', complement: complement(r, g, b) };
+  }
+
+  function tieVerdict(shirtCat, tieRgb, shirtRgb) {
+    const tieCat = categorize(tieRgb.r, tieRgb.g, tieRgb.b), t = TIES[shirtCat];
+    const base = { tieCat: tieCat, tieLabel: LABEL[tieCat] };
+    if (t.good.indexOf(tieCat) >= 0) return Object.assign(base, { level: 'bom', verdict: 'combina bem', reason: 'É uma combinação clássica com camisa ' + LABEL[shirtCat] + '.' });
+    if (t.avoid.indexOf(tieCat) >= 0) {
+      const why = tieCat === shirtCat ? 'A gravata quase se confunde com a camisa.' : 'Não é uma combinação recomendada com camisa ' + LABEL[shirtCat] + '.';
+      return Object.assign(base, { level: 'evitar', verdict: 'melhor evitar', reason: why });
+    }
+    const dv = Math.abs(hsv(tieRgb.r, tieRgb.g, tieRgb.b).v - hsv(shirtRgb.r, shirtRgb.g, shirtRgb.b).v);
+    if (dv < 0.1) return Object.assign(base, { level: 'possivel', verdict: 'combinação possível', reason: 'Pouco contraste de claro e escuro com a camisa; prefira uma gravata mais escura ou mais clara.' });
+    return Object.assign(base, { level: 'possivel', verdict: 'combinação possível', reason: 'Não é uma das mais clássicas, mas pode funcionar.' });
+  }
+
   const api = {
     toLinear: toLinear, toSrgb: toSrgb, makeLuts: makeLuts, gainsFromWhite: gainsFromWhite,
     hsv: hsv, nameColor: nameColor, averageRegion: averageRegion,
-    fruitCounts: fruitCounts, ripeness: ripeness, highlight: highlight
+    fruitCounts: fruitCounts, ripeness: ripeness, highlight: highlight,
+    categorize: categorize, shirtAdvice: shirtAdvice, tieVerdict: tieVerdict, TIES: TIES, LABEL: LABEL
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Cores = api;

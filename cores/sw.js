@@ -1,6 +1,6 @@
 // Guarda o aplicativo no celular para funcionar sem internet.
 // Busca primeiro na rede (para receber atualizações) e usa a cópia guardada se estiver sem conexão.
-const CACHE = 'cores-v1';
+const CACHE = 'cores-v2';
 const FILES = ['./', 'index.html', 'cores.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {

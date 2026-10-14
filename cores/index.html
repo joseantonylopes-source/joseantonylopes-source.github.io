@@ -24,7 +24,7 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   button { font: inherit; color: inherit; cursor: pointer; }
   .tabs { display: flex; gap: 6px; padding: 8px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
-  .tabs button { flex: 1; padding: 10px 4px; border: 2px solid var(--line); background: transparent;
+  .tabs button { flex: 1; padding: 10px 2px; font-size: .92rem; border: 2px solid var(--line); background: transparent;
     border-radius: 10px; font-weight: 600; }
   .tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   .view { position: relative; flex: 1; min-height: 0; background: #000; overflow: hidden; }
@@ -39,7 +39,7 @@
   .big { padding: 14px 22px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-text);
     font-weight: 700; font-size: 1.1rem; min-width: 220px; }
   .big.secondary { background: transparent; color: var(--text); border: 2px solid var(--line); }
-  .panel { background: var(--panel); border-top: 1px solid var(--line); padding: 12px 14px 10px; }
+  .panel { background: var(--panel); border-top: 1px solid var(--line); padding: 12px 14px 10px; max-height: 58dvh; overflow-y: auto; }
   .sub { display: flex; gap: 6px; margin-bottom: 10px; }
   .sub button { flex: 1; padding: 8px 4px; border: 2px solid var(--line); background: transparent; border-radius: 8px; font-size: .95rem; }
   .sub button[aria-pressed="true"] { border-color: var(--text); font-weight: 700; }
@@ -66,6 +66,7 @@
     <button data-mode="cor" aria-pressed="true">Cor</button>
     <button data-mode="fruta" aria-pressed="false">Frutas</button>
     <button data-mode="destaque" aria-pressed="false">Destaque</button>
+    <button data-mode="roupa" aria-pressed="false">Gravata</button>
     <button data-mode="ajuda" aria-pressed="false" aria-label="Ajuda">?</button>
   </nav>
 
@@ -91,6 +92,8 @@
       <p>Centralize o objeto no quadrado branco. O aplicativo informa o nome da cor e o grupo a que ela pertence. Quando a cor está na fronteira entre dois grupos, ele avisa que pode ser também a outra.</p>
       <h3>Frutas</h3>
       <p>Escolha banana ou pera e aproxime o celular até a casca preencher o retângulo. Na banana, a cor é um bom sinal de maturação. Na pera, a cor ajuda pouco, porque muitas variedades continuam verdes mesmo maduras; o mais confiável é apertar de leve a parte estreita perto do cabo.</p>
+      <h3>Gravata</h3>
+      <p>No passo 1, aponte para a camisa, de preferência numa parte lisa, e veja quais cores de gravata combinam com ela e quais evitar. Toque em Registrar esta camisa. No passo 2, aponte para cada gravata: o aplicativo diz se ela combina bem, se é uma combinação possível ou se é melhor evitar. Assim você confere as gravatas que tem em casa sem precisar adivinhar a cor delas. Em gravatas estampadas, a leitura considera a cor predominante no quadrado. As sugestões seguem combinações usuais no vestuário masculino; são orientações, não regras.</p>
       <h3>Destaque</h3>
       <p>Mostra listras diagonais em preto e branco sobre tudo o que é vermelho e listras horizontais sobre tudo o que é verde. Use para tomates, luzes de carregadores, gráficos e mapas.</p>
       <h3>Calibrar</h3>
@@ -108,6 +111,10 @@
       <button data-fruit="banana" aria-pressed="true">Banana</button>
       <button data-fruit="pera" aria-pressed="false">Pera</button>
     </div>
+    <div class="sub hidden" id="subRoupa">
+      <button data-step="camisa" aria-pressed="true">1. Camisa</button>
+      <button data-step="gravata" aria-pressed="false">2. Gravata</button>
+    </div>
     <div class="sub hidden" id="subDestaque">
       <button data-hl="ambos" aria-pressed="true">Ambos</button>
       <button data-hl="vermelho" aria-pressed="false">Vermelhos</button>
@@ -119,9 +126,11 @@
         <div class="title" id="title">—</div>
         <div class="line" id="line1"></div>
         <div class="line" id="line2"></div>
+        <div class="line" id="line3"></div>
         <div class="warn" id="warn"></div>
       </div>
     </div>
+    <button class="big hidden" id="btnShirt" style="width:100%;margin-top:10px">Registrar esta camisa</button>
     <div class="actions">
       <button id="btnSpeak">Ouvir</button>
       <button id="btnPause" aria-pressed="false">Pausar</button>
@@ -144,7 +153,7 @@
   const octx = overlay.getContext('2d');
 
   const state = {
-    mode: 'cor', fruit: 'banana', hl: 'ambos', paused: false,
+    mode: 'cor', fruit: 'banana', hl: 'ambos', step: 'camisa', shirt: null, paused: false,
     source: null, stream: null, track: null, torch: false,
     gains: null, luts: Cores.makeLuts(null), avg: null, lastSpoken: '', last: null
   };
@@ -155,6 +164,8 @@
   const saved = load('cores.gains');
   if (Array.isArray(saved) && saved.length === 3) { state.gains = saved; state.luts = Cores.makeLuts(saved); }
   const savedMode = load('cores.mode');
+  const savedShirt = load('cores.shirt');
+  if (savedShirt && savedShirt.cat && Cores.TIES[savedShirt.cat]) state.shirt = savedShirt;
   updateCalibLabel();
 
   let toastTimer = 0;
@@ -223,6 +234,7 @@
   // Tamanho do quadro alvo, em fração da área visível.
   function targetBox() {
     if (state.mode === 'cor') return { fw: 0.09, fh: 0.09, square: true };
+    if (state.mode === 'roupa') return { fw: 0.16, fh: 0.16, square: true };
     if (state.mode === 'fruta') return state.fruit === 'banana' ? { fw: 0.7, fh: 0.22 } : { fw: 0.45, fh: 0.3 };
     return null;
   }
@@ -252,6 +264,7 @@
     $('title').textContent = r.title || '—';
     $('line1').textContent = r.line1 || '';
     $('line2').textContent = r.line2 || '';
+    $('line3').textContent = r.line3 || '';
     $('warn').textContent = r.warn || '';
     $('swatch').style.background = r.swatch || 'transparent';
     $('swatch').classList.toggle('hidden', !r.swatch);
@@ -260,7 +273,7 @@
   function speakText() {
     const r = state.last;
     if (!r) return '';
-    return [r.title, r.line1, r.speakExtra !== undefined ? r.speakExtra : r.line2, r.warn].filter(Boolean).join('. ');
+    return [r.title, r.line1, r.speakExtra !== undefined ? r.speakExtra : r.line2, r.line3, r.warn].filter(Boolean).join('. ');
   }
 
   // ---------- Processamento de cada modo ----------
@@ -303,6 +316,54 @@
     });
   }
 
+  // Lê a cor média do quadrado central, com suavização, para os modos de roupa.
+  function readCenter() {
+    const dim = grab(320); if (!dim) return null;
+    const rc = rectFor(dim);
+    const img = wctx.getImageData(rc.x, rc.y, rc.w, rc.h);
+    const a = Cores.averageRegion(img.data, rc.w, 0, 0, rc.w, rc.h, state.luts);
+    if (!a) return null;
+    const k = 0.35;
+    state.avg = state.avg ? { r: state.avg.r + (a.r - state.avg.r) * k, g: state.avg.g + (a.g - state.avg.g) * k, b: state.avg.b + (a.b - state.avg.b) * k } : a;
+    const raw = Cores.averageRegion(img.data, rc.w, 0, 0, rc.w, rc.h, null);
+    return { rgb: { r: state.avg.r, g: state.avg.g, b: state.avg.b }, spread: a.spread, dark: raw && Math.max(raw.r, raw.g, raw.b) < 40 };
+  }
+
+  function rgbCss(c) { return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')'; }
+
+  function processRoupa() {
+    if (state.step === 'gravata' && !state.shirt) {
+      show({ title: 'Registre a camisa primeiro', line1: 'Toque em "1. Camisa", aponte para a camisa e toque em Registrar esta camisa.' });
+      return;
+    }
+    const m = readCenter(); if (!m) return;
+    let warn = '';
+    if (m.dark) warn = 'Pouca luz: a leitura pode estar errada.';
+    if (state.step === 'camisa') {
+      if (!warn && m.spread > 38) warn = 'Há mais de uma cor no quadrado. Aponte para uma parte lisa da camisa.';
+      const a = Cores.shirtAdvice(m.rgb.r, m.rgb.g, m.rgb.b);
+      state.pendingShirt = { cat: a.cat, rgb: m.rgb };
+      show({
+        title: 'Camisa ' + a.label,
+        line1: 'Gravatas que combinam: ' + a.good + '.',
+        line2: 'Evite: ' + a.avoid + '.',
+        line3: a.note || (a.complement ? 'No círculo cromático, a cor oposta à da camisa é o ' + a.complement + ': uma gravata nesse tom cria contraste forte e chamativo.' : ''),
+        warn: warn, swatch: rgbCss(m.rgb)
+      });
+    } else {
+      if (!warn && m.spread > 38) warn = 'Gravata estampada: considerei a cor predominante no quadrado.';
+      const v = Cores.tieVerdict(state.shirt.cat, m.rgb, state.shirt.rgb);
+      const a = Cores.shirtAdvice(state.shirt.rgb.r, state.shirt.rgb.g, state.shirt.rgb.b);
+      show({
+        title: 'Gravata ' + v.tieLabel + ': ' + v.verdict,
+        line1: v.reason,
+        line2: 'Camisa registrada: ' + Cores.LABEL[state.shirt.cat] + '.',
+        line3: v.level === 'bom' ? '' : 'Combinam melhor: ' + a.good + '.',
+        warn: warn, swatch: rgbCss(m.rgb)
+      });
+    }
+  }
+
   function processDestaque() {
     const dim = grab(240); if (!dim) return;
     const img = wctx.getImageData(0, 0, dim.w, dim.h);
@@ -329,6 +390,7 @@
       if (state.mode === 'cor') processCor();
       else if (state.mode === 'fruta') processFruta();
       else if (state.mode === 'destaque') processDestaque();
+      else if (state.mode === 'roupa') processRoupa();
     } catch (e) { /* um quadro com falha não deve parar o aplicativo */ }
   }
   requestAnimationFrame(loop);
@@ -342,6 +404,8 @@
     $('panel').classList.toggle('hidden', mode === 'ajuda');
     $('subFruta').classList.toggle('hidden', mode !== 'fruta');
     $('subDestaque').classList.toggle('hidden', mode !== 'destaque');
+    $('subRoupa').classList.toggle('hidden', mode !== 'roupa');
+    $('btnShirt').classList.toggle('hidden', !(mode === 'roupa' && state.step === 'camisa'));
     overlay.classList.toggle('hidden', mode !== 'destaque');
     layoutTarget();
     if (mode !== 'ajuda') show({ title: '—' });
@@ -360,6 +424,7 @@
       try {
         if (state.mode === 'cor') { state.avg = null; processCor(); }
         else if (state.mode === 'fruta') processFruta();
+        else if (state.mode === 'roupa') { state.avg = null; processRoupa(); }
         else processDestaque();
       } catch (e) {}
       if (state.source === 'video') video.pause();
@@ -373,6 +438,22 @@
     document.querySelectorAll('#subFruta button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     layoutTarget(); if (state.paused) setPaused(true);
   }));
+  function setStep(step) {
+    state.step = step; state.avg = null;
+    document.querySelectorAll('#subRoupa button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.step === step)));
+    $('btnShirt').classList.toggle('hidden', step !== 'camisa');
+    if (state.paused) setPaused(true); else show({ title: '—' });
+  }
+  document.querySelectorAll('#subRoupa button').forEach(b => b.addEventListener('click', () => setStep(b.dataset.step)));
+  $('btnShirt').addEventListener('click', () => {
+    if (!state.source) { toast('Abra a câmera primeiro.'); return; }
+    if (!state.pendingShirt) { toast('Aponte para a camisa e aguarde a leitura.'); return; }
+    state.shirt = state.pendingShirt; store('cores.shirt', state.shirt);
+    toast('Camisa ' + Cores.LABEL[state.shirt.cat] + ' registrada. Agora aponte para as gravatas.');
+    if (state.paused) { state.paused = false; refreshPause(); if (state.source === 'video') video.play().catch(() => {}); }
+    setStep('gravata');
+  });
+
   document.querySelectorAll('#subDestaque button').forEach(b => b.addEventListener('click', () => {
     state.hl = b.dataset.hl;
     document.querySelectorAll('#subDestaque button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -434,7 +515,7 @@
     }
   });
 
-  setMode(savedMode === 'fruta' || savedMode === 'destaque' ? savedMode : 'cor');
+  setMode(['fruta', 'destaque', 'roupa'].indexOf(savedMode) >= 0 ? savedMode : 'cor');
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
